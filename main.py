@@ -33,9 +33,6 @@ class Name(Field):
 
 class Birthday(Field):
 
-    # def __init__(self, value):
-    #     super().__init__()
-
     def is_valid(self, str_birthday):
         if str_birthday is None:
             return True
@@ -43,22 +40,11 @@ class Birthday(Field):
             datetime.strptime(str_birthday, '%Y-%m-%d').date()
             return True
         except ValueError:
-            return False  # (f"{self.name} invalid date!")
-
-    # @staticmethod
-    # def set_birthday(str_birthday):
-    #     try:
-    #         valid_date = datetime.strptime(str_birthday, '%d-%m-%Y').date()
-    #         print(valid_date)
-    #         return True
-    #     except ValueError:
-    #         return False
+            return False
 
 
 class Phone(Field):
 
-    # def __init__(self, value):
-    #     super().__init__()
     def is_valid(self, value):
         return len(value) == 10 and value.isdigit()
 
@@ -94,28 +80,13 @@ class Record:
                 return p
         return None
 
-    # def set_birthday(self, str_birthday):
-    #
-    #     try:
-    #         valid_date = datetime.strptime(str_birthday, '%d-%m-%Y').date()
-    #         print(valid_date)
-    #     except ValueError:
-    #         return print(f"{self.name} invalid date!")
-    #
-    #     self.birthday = valid_date
-
     def days_to_birthday(self):
-        # if not self.birthday.is_valid(self.birthday):
-        #     raise ValueError(f"{self.birthday} does not match format '%Y-%m-%d'")
 
         if self.birthday.value is None:
-            # return "Birthday not specified!"
             return None
         else:
             current_date = datetime.today().date()
-
             bd = datetime.strptime(self.birthday.value, '%Y-%m-%d').date()
-            # birthday_this_year = self.birthday.replace(year=current_date.year)
 
             birthday_this_year = datetime(year=current_date.year, month=bd.month, day=bd.day).date()
             difference = birthday_this_year - current_date
@@ -124,12 +95,6 @@ class Record:
                 difference = birthday_this_year - current_date
 
             return difference.days
-
-            # if difference < timedelta(days=0):
-            #     if current_date.year % 4 == 0:
-            #         difference += timedelta(days=366)
-            #     else:
-            #         difference += timedelta(days=365)
 
     def __str__(self):
         if self.birthday.value is None:
@@ -214,7 +179,6 @@ print("---" * 20)
 found_phone = john.find_phone("5555555555")
 # found_phone = john.find_phone("1234567890")
 print(f"{john.name}: {found_phone}")  # Виведення: 5555555555
-
 
 print("+" * 70)
 for portion in book.iterator():
