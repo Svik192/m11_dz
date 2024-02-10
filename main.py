@@ -37,11 +37,13 @@ class Birthday(Field):
     #     super().__init__()
 
     def is_valid(self, str_birthday):
+        if str_birthday is None:
+            return True
         try:
             datetime.strptime(str_birthday, '%Y-%m-%d').date()
             return True
         except ValueError:
-            raise False  # (f"{self.name} invalid date!")
+            return False  # (f"{self.name} invalid date!")
 
     # @staticmethod
     # def set_birthday(str_birthday):
@@ -65,26 +67,14 @@ class Record:
     def __init__(self, name, birthday=None):
         self.name = Name(name)
         self.phones = []
-        self.birthday = Birthday(birthday) if birthday else None
+        self.birthday = Birthday(birthday)
 
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
 
     def remove_phone(self, phone):
-        # # self.phones = [p for p in self.phones if p.value != phone]
-        # # Створюємо новий список, виключаючи ті елементи, у яких значення дорівнює вказаному телефону
-        # updated_phones = []
-        # for p in self.phones:
-        #     if p.value != phone:
-        #         updated_phones.append(p)
-        #
-        # self.phones = updated_phones
-
-        # if len(updated_phones) == len(self.phones):
-        #     raise ValueError("Phone not found")
-
         try:
-            self.phones.remove(phone)
+            self.phones.remove(self.find_phone(phone))
         except ValueError:
             raise ValueError("Phone not found")
 
@@ -93,7 +83,7 @@ class Record:
     def edit_phone(self, old_phone, new_phone):
 
         if self.find_phone(old_phone) is None:
-            raise ValueError("phone number does not exist")
+            raise ValueError("Phone number does not exist")
 
         self.remove_phone(old_phone)
         self.add_phone(new_phone)
@@ -118,13 +108,13 @@ class Record:
         # if not self.birthday.is_valid(self.birthday):
         #     raise ValueError(f"{self.birthday} does not match format '%Y-%m-%d'")
 
-        if self.birthday is None:
+        if self.birthday.value is None:
             # return "Birthday not specified!"
-            return
+            return None
         else:
             current_date = datetime.today().date()
 
-            bd = datetime.strptime(self.birthday, '%Y-%m-%d').date()
+            bd = datetime.strptime(self.birthday.value, '%Y-%m-%d').date()
             # birthday_this_year = self.birthday.replace(year=current_date.year)
 
             birthday_this_year = datetime(year=current_date.year, month=bd.month, day=bd.day).date()
@@ -142,9 +132,9 @@ class Record:
             #         difference += timedelta(days=365)
 
     def __str__(self):
-        if self.birthday is None:
+        if self.birthday.value is None:
             return (f"Contact name: {self.name.value}, "
-                    f"phones: {'; '.join(str(p) for p in self.phones)}, ")
+                    f"phones: {'; '.join(str(p) for p in self.phones)} ")
         else:
             return (f"Contact name: {self.name.value}, "
                     f"phones: {'; '.join(str(p) for p in self.phones)}, "
@@ -156,11 +146,19 @@ class AddressBook(UserDict):
         self.data[record.name.value] = record
 
     def find(self, name):
-        return self.data.get(name)
+        return self.data.get(name, None)
 
     def delete(self, name):
         if name in self.data:
             del self.data[name]
+
+    def iterator(self, portion_size=2):
+        records = list(self.data.values())
+        i = 0
+        while i < len(records):
+            portion = records[i:i + portion_size]
+            yield portion
+            i += portion_size
 
 
 # Створення нової адресної книги
@@ -178,8 +176,14 @@ book.add_record(john_record)
 jane_record = Record("Jane")
 jane_record.add_phone("9876543210")
 
+# Створення та додавання нового запису для Jane
+jack_record = Record("Jack")
+jack_record.add_phone("1234554321")
+jack_record.birthday.value = "1992-05-05"
+book.add_record(jack_record)
+
 # Додавання дня народження для запису Jane та John
-jane_record.birthday = "1992-03-0p"
+jane_record.birthday.value = "1992-03-03"
 
 # john_record.birthday = "1990-011-15"
 
@@ -199,14 +203,28 @@ print("---" * 10)
 
 # Знаходження та редагування телефону для John
 john = book.find("John")
+print(john)
 
 john.edit_phone("1234567890", "1112223333")
 
 print(john)  # Виведення: Contact name: John, phones: 1112223333; 5555555555
 
 # Пошук конкретного телефону у записі John
+print("---" * 20)
 found_phone = john.find_phone("5555555555")
+# found_phone = john.find_phone("1234567890")
 print(f"{john.name}: {found_phone}")  # Виведення: 5555555555
+
+
+print("+" * 70)
+for portion in book.iterator():
+    print(type(portion))
+    print(portion)
+
+    for item in portion:
+        print(item)
+
+    print("-" * 40)
 
 # Видалення запису Jane
 book.delete("Jane")
